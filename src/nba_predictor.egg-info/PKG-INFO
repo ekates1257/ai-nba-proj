@@ -1,3 +1,21 @@
+Metadata-Version: 2.4
+Name: nba-predictor
+Version: 0.1.0
+Summary: Cloud-native NBA sophomore stat prediction API scaffold.
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi<1.0,>=0.115
+Requires-Dist: joblib<2.0,>=1.4
+Requires-Dist: numpy<3.0,>=1.26
+Requires-Dist: pandas<3.0,>=2.2
+Requires-Dist: pydantic<3.0,>=2.9
+Requires-Dist: scikit-learn<2.0,>=1.5
+Requires-Dist: tensorflow<3.0,>=2.16
+Requires-Dist: uvicorn[standard]<1.0,>=0.30
+Provides-Extra: dev
+Requires-Dist: httpx<1.0,>=0.27; extra == "dev"
+Requires-Dist: pytest<9.0,>=8.3; extra == "dev"
+
 # NBA Rookie Progression Predictor
 
 Predict an NBA player’s **sophomore-season per-game stats** (Points, Rebounds, Assists) from their **rookie-season per-game stats** using a TensorFlow/Keras neural network.
