@@ -13,6 +13,23 @@ def test_health_endpoint_returns_status() -> None:
     assert "artifacts_loaded" in payload
 
 
+def test_predict_success() -> None:
+    client = TestClient(app)
+    response = client.post(
+        "/predict",
+        json={
+            "GP_r": 82,
+            "MIN_r": 10,
+            "FG_PCT_r": 0.45,
+            "REB_r": 5,
+            "AST_r": 3,
+            "PTS_r": 8,
+            "TOV_r": 3,
+        },
+    )
+
+    assert response.status_code == 200
+
 def test_predict_rejects_invalid_field_goal_percentage_scale() -> None:
     client = TestClient(app)
     response = client.post(
