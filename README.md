@@ -74,6 +74,13 @@ Run the API locally:
 uvicorn nba_predictor.main:app --reload
 ```
 
+Rerun with new changes:
+```bash
+pip uninstall -y nba-predictor
+pip install -e '.[dev]'
+uvicorn nba_predictor.main:app --reload
+```
+
 Open the docs:
 
 ```text
@@ -88,6 +95,8 @@ http://127.0.0.1:8000/docs
   Returns model version, feature list, targets, and evaluation metadata.
 - `POST /predict`
   Accepts rookie-year feature inputs and returns predicted sophomore stats.
+- `GET /predict/player/{player_name}`
+  Looks up a rookie in `prediction.csv` by name and returns a prediction using their stored rookie-season inputs.
 
 Example request:
 

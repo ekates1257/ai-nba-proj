@@ -2,10 +2,15 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 
-from nba_predictor.inference import ArtifactsNotReadyError, PredictionService
+from nba_predictor.inference import (
+    ArtifactsNotReadyError,
+    PlayerNotFoundError,
+    PredictionService,
+)
 from nba_predictor.schemas import (
     HealthResponse,
     ModelInfoResponse,
+    PlayerPredictionResponse,
     PredictionRequest,
     PredictionResponse,
 )
@@ -45,3 +50,12 @@ def predict(request: PredictionRequest) -> PredictionResponse:
     except ArtifactsNotReadyError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
+
+@app.get("/predict/player/{player_name}", response_model=PlayerPredictionResponse)
+def predict_by_player_name(player_name: str) -> PlayerPredictionResponse:
+    try:
+        return PlayerPredictionResponse(**service.predict_by_player_name(player_name))
+    except PlayerNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ArtifactsNotReadyError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc

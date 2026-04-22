@@ -5,13 +5,23 @@ from pathlib import Path
 
 import joblib
 import numpy as np
+import pandas as pd
 from tensorflow import keras
 
-from nba_predictor.config import METADATA_PATH, MODEL_PATH, SCALER_PATH
+from nba_predictor.config import (
+    DEFAULT_PREDICTION_DATA_PATH,
+    METADATA_PATH,
+    MODEL_PATH,
+    SCALER_PATH,
+)
 from nba_predictor.schemas import PredictionRequest
 
 
 class ArtifactsNotReadyError(RuntimeError):
+    pass
+
+
+class PlayerNotFoundError(LookupError):
     pass
 
 
@@ -21,17 +31,21 @@ class PredictionService:
         model_path: Path = MODEL_PATH,
         scaler_path: Path = SCALER_PATH,
         metadata_path: Path = METADATA_PATH,
+        prediction_data_path: Path = DEFAULT_PREDICTION_DATA_PATH,
     ) -> None:
         self.model_path = model_path
         self.scaler_path = scaler_path
         self.metadata_path = metadata_path
+        self.prediction_data_path = prediction_data_path
         self.model = None
         self.scaler = None
         self.metadata: dict = {}
+        self.player_lookup: dict[str, dict] = {}
         self.loaded = False
         self.last_error: str | None = None
 
     def load_artifacts(self) -> None:
+        self._load_player_lookup()
         missing_files = self.missing_files()
         if missing_files:
             self.loaded = False
@@ -52,6 +66,25 @@ class PredictionService:
             self.metadata = {}
             self.loaded = False
             self.last_error = f"{type(exc).__name__}: {exc}"
+
+    def _load_player_lookup(self) -> None:
+        if not self.prediction_data_path.exists():
+            self.player_lookup = {}
+            return
+
+        player_df = pd.read_csv(self.prediction_data_path)
+        records = {}
+        for _, row in player_df.iterrows():
+            player_name = str(row["PLAYER_NAME"]).strip()
+            records[self._normalize_player_name(player_name)] = {
+                "player_name": player_name,
+                "features": row.to_dict(),
+            }
+        self.player_lookup = records
+
+    @staticmethod
+    def _normalize_player_name(player_name: str) -> str:
+        return " ".join(player_name.strip().lower().split())
 
     def missing_files(self) -> list[str]:
         missing = []
@@ -108,3 +141,20 @@ class PredictionService:
             "model_version": self.metadata.get("model_version"),
         }
 
+    def predict_by_player_name(self, player_name: str) -> dict:
+        normalized_name = self._normalize_player_name(player_name)
+        player_record = self.player_lookup.get(normalized_name)
+        if player_record is None:
+            raise PlayerNotFoundError(
+                f"No rookie player data found for '{player_name}'."
+            )
+
+        feature_cols = self.metadata.get("feature_cols", [])
+        rookie_features = {
+            feature_name: float(player_record["features"][feature_name])
+            for feature_name in feature_cols
+        }
+        prediction = self.predict(PredictionRequest(**rookie_features))
+        prediction["player_name"] = player_record["player_name"]
+        prediction["rookie_stats"] = rookie_features
+        return prediction

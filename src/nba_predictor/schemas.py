@@ -70,6 +70,11 @@ class PredictionResponse(BaseModel):
     model_version: str | None = None
 
 
+class PlayerPredictionResponse(PredictionResponse):
+    player_name: str
+    rookie_stats: dict[str, float]
+
+
 class HealthResponse(BaseModel):
     status: str
     artifacts_loaded: bool
