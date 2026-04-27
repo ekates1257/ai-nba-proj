@@ -59,7 +59,7 @@ Install dependencies:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e .[dev]
+pip install -e '.[dev]'
 ```
 
 Train serving artifacts:
@@ -82,6 +82,32 @@ uvicorn nba_predictor.main:app --reload
 ```
 
 Open the docs:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+## Docker Workflow
+
+Train artifacts before building the image:
+
+```bash
+python -m nba_predictor.training
+```
+
+Build the container:
+
+```bash
+docker build -t nba-predictor-api .
+```
+
+Run the container locally:
+
+```bash
+docker run --rm -p 8000:8000 nba-predictor-api
+```
+
+Open the containerized API docs:
 
 ```text
 http://127.0.0.1:8000/docs
